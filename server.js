@@ -1,8 +1,9 @@
 import express from "express";
 import next from "next";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import Movie from "./models/Movie.js";
+import { connectDB } from "./lib/mongodb.js";
+; // importa a função de conexão
 
 dotenv.config();
 
@@ -11,9 +12,8 @@ const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ MongoDB conectado"))
-  .catch(err => console.log("❌ Erro MongoDB:", err));
+// Conecta ao MongoDB usando sua função
+connectDB();
 
 app.prepare().then(() => {
   const server = express();
@@ -69,7 +69,7 @@ app.prepare().then(() => {
   // ---------------------------
   // Next.js pages
   // ---------------------------
-server.get("*", (req, res) => handle(req, res));
+  server.get("*", (req, res) => handle(req, res));
 
   server.listen(port, () => {
     console.log(`🚀 Servidor rodando na porta ${port}`);
