@@ -3,7 +3,6 @@ import next from "next";
 import dotenv from "dotenv";
 import Movie from "./models/Movie.js";
 import { connectDB } from "./lib/mongodb.js";
-; // importa a função de conexão
 
 dotenv.config();
 
@@ -12,7 +11,6 @@ const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-// Conecta ao MongoDB usando sua função
 connectDB();
 
 app.prepare().then(() => {
@@ -66,9 +64,6 @@ app.prepare().then(() => {
     }
   });
 
-  // ---------------------------
-  // Next.js pages
-  // ---------------------------
   server.get("*", (req, res) => handle(req, res));
 
   server.listen(port, () => {
