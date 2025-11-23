@@ -1,41 +1,35 @@
-import { useEffect, useState } from "react";
-import { getMoviesByRating, deleteMovie, editMovie } from "../services/api";
+"use client";
+
+import useSWR from "swr";
+import { deleteMovie, editMovie } from "../services/api";
 
 export default function MoviesByRating({ onEdit }) {
-  const [movies, setMovies] = useState([]);
+  const fetcher = async () => {
+    const data = await fetch("/api/movies?sortBy=rating&order=desc").then(res => res.json());
+    return data;
+  };
 
-  // Carrega todos os filmes ordenados por rating (desc)
-  useEffect(() => {
-    async function loadMovies() {
-      try {
-        const data = await getMoviesByRating(); // ?sortBy=rating&order=desc
-        setMovies(data);
-      } catch (error) {
-        console.error("Erro ao carregar filmes por rating:", error);
-      }
-    }
-    loadMovies();
-  }, []);
+  const { data: movies = [], mutate } = useSWR("/api/movies/rating", fetcher);
 
   // Deleta filme
-  async function handleDelete(id) {
+  const handleDelete = async (id) => {
     try {
       await deleteMovie(id);
-      setMovies(movies.filter(movie => movie._id !== id));
+      mutate(); // Atualiza a lista automaticamente
     } catch (error) {
       console.error("Erro ao deletar filme:", error);
     }
-  }
+  };
 
   // Alterna status visto/não visto
-  async function handleToggleWatched(movie) {
+  const handleToggleWatched = async (movie) => {
     try {
-      const updatedMovie = await editMovie(movie._id, { watched: !movie.watched });
-      setMovies(movies.map(m => (m._id === movie._id ? updatedMovie : m)));
+      await editMovie(movie._id, { watched: !movie.watched });
+      mutate(); // Revalida a lista
     } catch (error) {
       console.error("Erro ao atualizar status do filme:", error);
     }
-  }
+  };
 
   return (
     <div className="text-white">
@@ -68,7 +62,6 @@ export default function MoviesByRating({ onEdit }) {
             textShadow: '1px 1px 2px rgba(0,0,0,0.3), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
           }} className="text-yellow-400 font-medium mt-1">⭐ Avaliação: {movie.rating}</p>
 
-          {/* Checkbox para marcar/desmarcar como visto */}
           <div className="flex items-center gap-4 mt-4">
             <label className="flex items-center gap-2" style={{
                 fontFamily: 'Bungee',

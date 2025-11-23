@@ -1,49 +1,38 @@
-import { useEffect, useState } from "react";
-import { getNotWatchedMovies, deleteMovie, editMovie } from "../services/api";
+"use client";
+
+import useSWR from "swr";
+import { deleteMovie, editMovie } from "../services/api";
 
 export default function NotWatchedMovies({ onEdit }) {
-  const [movies, setMovies] = useState([]);
-
   const textStyle = {
     fontFamily: 'Bungee',
     textShadow: '1px 1px 2px rgba(0,0,0,0.3), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
   };
 
-  // Carrega apenas filmes que ainda não foram vistos
-  useEffect(() => {
-    async function loadMovies() {
-      try {
-        const data = await getNotWatchedMovies();
-        setMovies(data.filter(m => !m.watched)); // garante só não vistos
-      } catch (error) {
-        console.error("Erro ao carregar filmes não vistos:", error);
-      }
-    }
-    loadMovies();
-  }, []);
+  const fetcher = async () => {
+    const data = await fetch("/api/movies?filter=notWatched").then(res => res.json());
+    return data;
+  };
 
-  // Deleta filme
-  async function handleDelete(id) {
+  const { data: movies = [], mutate } = useSWR("/api/movies/notWatched", fetcher);
+
+  const handleDelete = async (id) => {
     try {
       await deleteMovie(id);
-      setMovies(movies.filter(movie => movie._id !== id));
+      mutate();
     } catch (error) {
       console.error("Erro ao deletar filme:", error);
     }
-  }
+  };
 
-  // Alterna status visto/não visto
-  async function handleToggleWatched(movie) {
+  const handleToggleWatched = async (movie) => {
     try {
-      const updatedMovie = await editMovie(movie._id, { watched: !movie.watched });
-      setMovies(movies
-        .map(m => (m._id === movie._id ? updatedMovie : m))
-        .filter(m => !m.watched) // remove da lista se agora estiver marcado como visto
-      );
+      await editMovie(movie._id, { watched: !movie.watched });
+      mutate(); // Revalida a lista e remove os filmes já assistidos
     } catch (error) {
       console.error("Erro ao atualizar status do filme:", error);
     }
-  }
+  };
 
   return (
     <div className="text-white">

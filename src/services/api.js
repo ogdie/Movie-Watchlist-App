@@ -1,4 +1,4 @@
-export const API_URL = "http://localhost:3000/api/movies";
+export const API_URL = "/api/movies";
 
 // -----------------------------
 // GET - Obter todos os filmes

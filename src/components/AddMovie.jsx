@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { addMovie } from "../services/api";
+import { API_URL } from "../services/api";
+import { mutate } from "swr";
 
-export default function AddMovie({ onClose, onMovieAdded }) {
+export default function AddMovie({ onClose }) {
   // ---------------------------
   // Estado do formulário
   // ---------------------------
@@ -14,12 +15,18 @@ export default function AddMovie({ onClose, onMovieAdded }) {
   const [error, setError] = useState("");
 
   // ---------------------------
+  // Montagem segura do portal
+  // ---------------------------
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  // ---------------------------
   // Função para enviar o formulário
   // ---------------------------
   const handleSubmit = async (e) => {
-    e.preventDefault(); // evita reload da página
+    e.preventDefault();
 
-    // validação simples
     if (!title || !year || !genre) {
       setError("Preencha todos os campos obrigatórios!");
       return;
@@ -34,13 +41,19 @@ export default function AddMovie({ onClose, onMovieAdded }) {
         watched,
       };
 
-      // chama a API para adicionar
-      const addedMovie = await addMovie(newMovie);
+      // Chamada à API Routes do Next.js
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newMovie),
+      });
 
-      // chama função do componente pai para atualizar a lista
-      if (onMovieAdded) onMovieAdded(addedMovie);
+      if (!res.ok) throw new Error("Erro ao adicionar filme");
 
-      // limpa o formulário
+      // Atualiza automaticamente a lista de filmes via SWR
+      mutate(API_URL);
+
+      // Limpa o formulário
       setTitle("");
       setYear("");
       setGenre("");
@@ -48,7 +61,7 @@ export default function AddMovie({ onClose, onMovieAdded }) {
       setWatched(false);
       setError("");
 
-      // fecha o modal
+      // Fecha o modal
       if (onClose) onClose();
     } catch (err) {
       console.error("Erro ao adicionar filme:", err);
@@ -56,25 +69,28 @@ export default function AddMovie({ onClose, onMovieAdded }) {
     }
   };
 
-  // prevent server/client markup mismatch and make sure document exists
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
+  // ---------------------------
+  // Modal
+  // ---------------------------
   const modal = (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
       <div className="w-full max-w-lg max-h-[90vh] overflow-auto bg-gray-900/95 rounded-xl p-6 shadow-2xl border border-white/10">
-        <h2 style={{
-          fontFamily: 'Bungee',
-          textShadow: '1px 1px 2px rgba(0,0,0,0.3), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
-        }} className="text-2xl font-bold text-yellow-400 mb-4 flex items-center gap-2">
+        <h2
+          style={{
+            fontFamily: "Bungee",
+            textShadow:
+              "1px 1px 2px rgba(0,0,0,0.3), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
+          }}
+          className="text-2xl font-bold text-yellow-400 mb-4 flex items-center gap-2"
+        >
           ➕ Adicionar Novo Filme
         </h2>
 
-        {error && <p className="text-red-400 bg-red-900/20 p-3 rounded mb-4 border border-red-500/20">{error}</p>}
+        {error && (
+          <p className="text-red-400 bg-red-900/20 p-3 rounded mb-4 border border-red-500/20">
+            {error}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
@@ -141,8 +157,9 @@ export default function AddMovie({ onClose, onMovieAdded }) {
             <button
               type="submit"
               style={{
-                fontFamily: 'Bungee',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.3), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+                fontFamily: "Bungee",
+                textShadow:
+                  "1px 1px 2px rgba(0,0,0,0.3), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
               }}
               className="flex-1 px-4 py-2 bg-green-500/90 hover:bg-green-600 text-yellow-400 rounded font-semibold transition transform hover:scale-105"
             >
@@ -152,8 +169,9 @@ export default function AddMovie({ onClose, onMovieAdded }) {
               type="button"
               onClick={onClose}
               style={{
-                fontFamily: 'Bungee',
-                textShadow: '1px 1px 2px rgba(0,0,0,0.3), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+                fontFamily: "Bungee",
+                textShadow:
+                  "1px 1px 2px rgba(0,0,0,0.3), -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
               }}
               className="flex-1 px-4 py-2 bg-gray-700/90 hover:bg-gray-600 text-yellow-400 rounded font-semibold transition transform hover:scale-105"
             >
