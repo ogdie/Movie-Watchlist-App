@@ -1,14 +1,13 @@
-import { connectDB } from "../../../lib/mongodb";
-import Movie from "../../../models/Movie";
+import { connectDB } from "../../../../lib/mongodb";
+import Movie from "../../../../models/Movie";
 import mongoose from "mongoose";
+
 
 export default async function handler(req, res) {
   await connectDB();
 
   const { id } = req.query;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ error: "ID inválido" });
-  }
+  if (!mongoose.Types.ObjectId.isValid(id)) return res.status(400).json({ error: "ID inválido" });
 
   if (req.method === "GET") {
     const movie = await Movie.findById(id);

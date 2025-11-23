@@ -10,16 +10,16 @@ export default function NotWatchedMovies({ onEdit }) {
   };
 
   const fetcher = async () => {
-    const data = await fetch("/api/movies?filter=notWatched").then(res => res.json());
+    const data = await fetch("/api/movies?watched=false").then(res => res.json());
     return data;
   };
 
-  const { data: movies = [], mutate } = useSWR("/api/movies/notWatched", fetcher);
+  const { data: movies = [], mutate } = useSWR("/api/movies?watched=false", fetcher);
 
   const handleDelete = async (id) => {
     try {
       await deleteMovie(id);
-      mutate();
+      mutate(); // atualiza a lista
     } catch (error) {
       console.error("Erro ao deletar filme:", error);
     }
@@ -28,7 +28,7 @@ export default function NotWatchedMovies({ onEdit }) {
   const handleToggleWatched = async (movie) => {
     try {
       await editMovie(movie._id, { watched: !movie.watched });
-      mutate(); // Revalida a lista e remove os filmes já assistidos
+      mutate(); // atualiza a lista; se o filme agora estiver "visto", ele sai da lista
     } catch (error) {
       console.error("Erro ao atualizar status do filme:", error);
     }
